@@ -1,8 +1,9 @@
 import Head from 'next/head'
-import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
+import ReactPlayer from 'react-player'
 
 export default function Home() {
+  const playerRef = useRef()
   const [actives, setActives] = useState([])
   const [loading, setLoading] = useState(true)
   const [value, setValue] = useState(0)
@@ -13,6 +14,9 @@ export default function Home() {
         console.log(array)
         setActives(array)
         setLoading(false)
+        if (array.length > 0) {
+          setValue(array[0].playbackId)
+        }
       })
   }
   useEffect(() => {
@@ -24,23 +28,32 @@ export default function Home() {
         <title>Create Next App</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-
-      <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
-        <button className="btn btn-primary">VFO</button>
-        <h1 className="text-6xl font-bold">select stream to watch </h1>
-        <select
-          disabled={loading}
-          value={value}
-          onChange={(e) => setValue(e.currentTarget.value)}
-        >
-          {actives.map((active, i) => (
-            <option key={i} value={i}>
-              {active.playbackId}
-            </option>
-          ))}
-        </select>
-      </main>
-
+      <ReactPlayer
+        controls="true"
+        playing="true"
+        url={'https://cdn.livepeer.com/hls/' + value + '/index.m3u8'}
+      />
+      <>
+        <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
+          <button className="btn btn-primary">VFO</button>
+          <h1 className="text-1l font-bold">select stream to watch </h1>
+          <select
+            className="text-6xl font-bold bg-black"
+            disabled={loading}
+            value={value}
+            onChange={(e) => {
+              console.log(e.currentTarget)
+              setValue(e.currentTarget.value)
+            }}
+          >
+            {actives.map((active, i) => (
+              <option key={i} value={active.playbackId}>
+                {active.name}
+              </option>
+            ))}
+          </select>
+        </main>
+      </>
       <footer className="flex items-center justify-center w-full h-24 border-t">
         <a
           className="flex items-center justify-center"
@@ -49,7 +62,7 @@ export default function Home() {
           rel="noopener noreferrer"
         >
           Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className="h-4 ml-2" />
+          <img src="/VFO.png" alt="Vercel Logo" className="h-20 ml-2" />
         </a>
       </footer>
     </div>
