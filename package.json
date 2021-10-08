@@ -1,11 +1,12 @@
 {
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "PORT=3006 next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "PORT=3006 next start"
   },
   "dependencies": {
+    "axios": "^0.22.0",
     "daisyui": "^1.14.2",
     "next": "latest",
     "react": "^17.0.2",
