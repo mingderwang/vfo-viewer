@@ -1,23 +1,57 @@
 import Head from 'next/head'
 import { useEffect, useState, useRef } from 'react'
 import ReactPlayer from 'react-player'
+import Web3Modal from 'web3modal'
 
 export default function Home() {
   const playerRef = useRef()
   const [actives, setActives] = useState([])
   const [loading, setLoading] = useState(true)
   const [value, setValue] = useState(0)
+  const [address, setAddress] = useState('')
+  const [chainId, setChainId] = useState('')
+  const [network, setNetwork] = useState('')
+
   async function bootstrap() {
-    fetch('/api/streams')
-      .then((res) => res.json())
-      .then((array) => {
-        console.log(array)
-        setActives(array)
-        setLoading(false)
-        if (array.length > 0) {
-          setValue(array[0].playbackId)
-        }
-      })
+    const providerOptions = {
+      /* See Provider Options Section */
+    }
+
+    const web3Modal = new Web3Modal({
+      network: 'ropsten', // optional
+      cacheProvider: true, // optional
+      providerOptions, // required
+    })
+
+    const provider = await web3Modal.connect()
+    console.log(provider)
+    if (typeof provider !== 'undefined') {
+      console.log('address:', provider.selectedAddress)
+      setAddress(provider.selectedAddress)
+      console.log('chainId:', provider.networkVersion)
+      setChainId(provider.networkVersion)
+
+      fetch('/api/streams')
+        .then((res) => res.json())
+        .then((array) => {
+          console.log(array)
+          setActives(array)
+          setLoading(false)
+          if (array.length > 0) {
+            setValue(array[0].playbackId)
+          }
+        })
+      const url_chainid = '/api/networks?chainId=' + provider.networkVersion
+
+      fetch(url_chainid)
+        .then((res) => res.json())
+        .then((array) => {
+          console.log('current chain', array)
+          if (array.length > 0) {
+            setNetwork(array[0].name)
+          }
+        })
+    }
   }
   useEffect(() => {
     bootstrap()
@@ -25,9 +59,10 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <Head>
-        <title>Create Next App</title>
+        <title>{address}</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
+      {address}
       <ReactPlayer
         controls="true"
         playing="true"
@@ -35,7 +70,7 @@ export default function Home() {
       />
       <>
         <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
-          <button className="btn btn-primary">VFO</button>
+          <button className="btn btn-primary">{network}</button>
           <h1 className="text-1l font-bold">select stream to watch </h1>
           <select
             className="text-6xl font-bold bg-black"
