@@ -19,6 +19,16 @@ const networkAPI = async (req, res) => {
       "logo_url": "https://www.covalenthq.com/static/images/icons/display-icons/ethereum-eth-logo.png"
       }
   )
+  networks.data.data.items.push(
+    {
+      "name": "eth-rinkeby",
+      "chain_id": "4",
+      "is_testnet": true,
+      "db_schema_name": "chain_eth_rinkeby",
+      "label": "Ethereum Testnet Rinkeby",
+      "logo_url": "https://www.covalenthq.com/static/images/icons/display-icons/ethereum-eth-logo.png"
+      }
+  )
   const result = networks.data.data.items.filter(
     i => (i.chain_id === q.chainId)
   )

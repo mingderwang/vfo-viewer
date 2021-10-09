@@ -2,6 +2,13 @@ import Head from 'next/head'
 import { useEffect, useState, useRef } from 'react'
 import ReactPlayer from 'react-player'
 import Web3Modal from 'web3modal'
+import SuperfluidSDK from '@superfluid-finance/js-sdk'
+const { Web3Provider } = require('@ethersproject/providers')
+const alice = '0xCCB186825101B56d8Fae58065191Fcf4eC2F2033'
+const defaultReceiver = alice
+var bob
+
+import { ethers } from 'ethers'
 
 export default function Home() {
   const playerRef = useRef()
@@ -11,25 +18,47 @@ export default function Home() {
   const [address, setAddress] = useState('')
   const [chainId, setChainId] = useState('')
   const [network, setNetwork] = useState('')
+  const [receiver, setReceiver] = useState(defaultReceiver)
+  const [currentReceiver, setCurrentReceiver] = useState('')
 
+  const startSuperFlow = async (provider) => {
+    console.log('sf')
+    const sf = new SuperfluidSDK.Framework({
+      ethers: provider,
+      version: 'v1', //"test"
+      tokens: ['fDAI'],
+    })
+    console.log('sf', sf)
+    await sf.initialize()
+    return sf
+  }
   async function bootstrap() {
     const providerOptions = {
       /* See Provider Options Section */
     }
 
     const web3Modal = new Web3Modal({
-      network: 'ropsten', // optional
+      //network: 'ropsten', // optional
       cacheProvider: true, // optional
       providerOptions, // required
     })
-
-    const provider = await web3Modal.connect()
+    const provider = new Web3Provider(window.ethereum)
     console.log(provider)
     if (typeof provider !== 'undefined') {
-      console.log('address:', provider.selectedAddress)
-      setAddress(provider.selectedAddress)
-      console.log('chainId:', provider.networkVersion)
-      setChainId(provider.networkVersion)
+      let address = await provider.getSigner().getAddress()
+      console.log('address:', await provider.getSigner().getAddress())
+      setAddress(address)
+      let network = await provider.getNetwork()
+      console.log('chainId:', network.chainId)
+      setChainId(network.chainId)
+      console.log('provider:', provider)
+
+      const provider2 = new Web3Provider(window.ethereum)
+      const sf = await startSuperFlow(provider2)
+      const signer = provider.getSigner()
+      const sender = await signer.getAddress()
+      console.log('⚡🌙 🌄❤️💖 🔑🎛💧💬📟🏷🌐💯📚💄☀️⚛️ ✨💵🔗🏷🗺 signer', sender)
+      bob = sf.user({ address: sender, token: sf.tokens.fDAIx.address })
 
       fetch('/api/streams')
         .then((res) => res.json())
@@ -38,11 +67,12 @@ export default function Home() {
           setActives(array)
           setLoading(false)
           if (array.length > 0) {
-            setValue(array[0].playbackId)
+            setValue(JSON.stringify({id: array[0].playbackId, name:array[0].name}))
           }
         })
-      const url_chainid = '/api/networks?chainId=' + provider.networkVersion
 
+      const url_chainid = '/api/networks?chainId=' + network.chainId
+      console.log('url_chainid', url_chainid)
       fetch(url_chainid)
         .then((res) => res.json())
         .then((array) => {
@@ -53,36 +83,68 @@ export default function Home() {
         })
     }
   }
+
+  const stopFlow = async () => {
+    console.log('bob', bob)
+    if (currentReceiver !== '' && typeof bob !== 'undefined') {
+      console.log('stop flow', currentReceiver)
+      await bob.flow({
+        recipient: currentReceiver,
+        flowRate: '0', // 10000 tokens / mo
+      })
+    }
+  }
+  const startNewFlow = async () => {
+    console.log('bob', bob)
+    if (receiver !== '' && typeof bob !== 'undefined') {
+      console.log('start to flow', receiver)
+      await bob.flow({
+        recipient: receiver,
+        flowRate: '3858024691358000', // 10000 tokens / mo
+      })
+    }
+    setCurrentReceiver(receiver)
+  }
+  useEffect(async () => {
+    stopFlow().then(console.log)
+    startNewFlow().then(console.log)
+  }, [receiver])
+
   useEffect(() => {
     bootstrap()
   }, [])
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <Head>
-        <title>{address}</title>
+        <title>{receiver}</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
       {address}
       <ReactPlayer
         controls="true"
         playing="true"
-        url={'https://cdn.livepeer.com/hls/' + value + '/index.m3u8'}
+        url={'https://cdn.livepeer.com/hls/' + JSON.parse(value).playbackId + '/index.m3u8'}
       />
       <>
         <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
           <button className="btn btn-primary">{network}</button>
           <h1 className="text-1l font-bold">select stream to watch </h1>
           <select
-            className="text-6xl font-bold bg-black"
+            className="text-6xl font-bold bg-yellow"
             disabled={loading}
             value={value}
             onChange={(e) => {
-              console.log(e.currentTarget)
+              const json = JSON.parse(e.currentTarget.value)
+              console.log('json', json)
               setValue(e.currentTarget.value)
+              setReceiver(json.name)
             }}
           >
             {actives.map((active, i) => (
-              <option key={i} value={active.playbackId}>
+              <option
+                key={i}
+                value={JSON.stringify({id: active.playbackId, name: active.name})}
+              >
                 {active.name}
               </option>
             ))}
