@@ -2,10 +2,12 @@ import Head from 'next/head'
 import { useEffect, useState, useRef } from 'react'
 import ReactPlayer from 'react-player'
 import Web3Modal from 'web3modal'
-import SuperfluidSDK from '@superfluid-finance/js-sdk'
+import SuperfluidSDK, {
+  setTruffleContractDefaults,
+} from '@superfluid-finance/js-sdk'
 const { Web3Provider } = require('@ethersproject/providers')
-const alice = '0xCCB186825101B56d8Fae58065191Fcf4eC2F2033'
-const defaultReceiver = alice
+const ming = '0xCCB186825101B56d8Fae58065191Fcf4eC2F2033'
+const defaultReceiver = ming
 var bob
 
 import { ethers } from 'ethers'
@@ -20,6 +22,7 @@ export default function Home() {
   const [network, setNetwork] = useState('')
   const [receiver, setReceiver] = useState(defaultReceiver)
   const [currentReceiver, setCurrentReceiver] = useState('')
+  const [url, setUrl] = useState('')
 
   const startSuperFlow = async (provider) => {
     console.log('sf')
@@ -67,7 +70,11 @@ export default function Home() {
           setActives(array)
           setLoading(false)
           if (array.length > 0) {
-            setValue(JSON.stringify({id: array[0].playbackId, name:array[0].name}))
+            setValue(
+              JSON.stringify({ id: array[0].playbackId, name: array[0].name }),
+            )
+            setReceiver(array[0].name)
+            startNewFlow(array[0].name)
           }
         })
 
@@ -94,7 +101,7 @@ export default function Home() {
       })
     }
   }
-  const startNewFlow = async () => {
+  const startNewFlow = async (receiver) => {
     console.log('bob', bob)
     if (receiver !== '' && typeof bob !== 'undefined') {
       console.log('start to flow', receiver)
@@ -107,12 +114,27 @@ export default function Home() {
   }
   useEffect(async () => {
     stopFlow().then(console.log)
-    startNewFlow().then(console.log)
+    startNewFlow(receiver).then(console.log)
+    if (typeof bob !== 'undefined') {
+      const details = await bob.details()
+      console.log(details)
+    }
   }, [receiver])
 
   useEffect(() => {
     bootstrap()
   }, [])
+
+  useEffect(() => {
+    console.log('value', value)
+    setUrl(
+      'https://cdn.livepeer.com/hls/' +
+        JSON.parse(value).id +
+        '/index.m3u8',
+    )
+    console.log('new url', url)
+  }, [value])
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <Head>
@@ -120,11 +142,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       {address}
-      <ReactPlayer
-        controls="true"
-        playing="true"
-        url={'https://cdn.livepeer.com/hls/' + JSON.parse(value).playbackId + '/index.m3u8'}
-      />
+      <ReactPlayer controls="true" playing="true" url={url} />
       <>
         <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
           <button className="btn btn-primary">{network}</button>
@@ -143,7 +161,10 @@ export default function Home() {
             {actives.map((active, i) => (
               <option
                 key={i}
-                value={JSON.stringify({id: active.playbackId, name: active.name})}
+                value={JSON.stringify({
+                  id: active.playbackId,
+                  name: active.name,
+                })}
               >
                 {active.name}
               </option>
