@@ -16,7 +16,7 @@ export default function Home() {
   const playerRef = useRef()
   const [actives, setActives] = useState([])
   const [loading, setLoading] = useState(true)
-  const [value, setValue] = useState(0)
+  const [value, setValue] = useState('')
   const [address, setAddress] = useState('')
   const [chainId, setChainId] = useState('')
   const [network, setNetwork] = useState('')
@@ -63,20 +63,8 @@ export default function Home() {
       console.log('⚡🌙 🌄❤️💖 🔑🎛💧💬📟🏷🌐💯📚💄☀️⚛️ ✨💵🔗🏷🗺 signer', sender)
       bob = sf.user({ address: sender, token: sf.tokens.fDAIx.address })
 
-      fetch('/api/streams')
-        .then((res) => res.json())
-        .then((array) => {
-          console.log(array)
-          setActives(array)
-          setLoading(false)
-          if (array.length > 0) {
-            setValue(
-              JSON.stringify({ id: array[0].playbackId, name: array[0].name }),
-            )
-            setReceiver(array[0].name)
-            startNewFlow(array[0].name)
-          }
-        })
+      checkNewStream()
+      startNewFlow()
 
       const url_chainid = '/api/networks?chainId=' + network.chainId
       console.log('url_chainid', url_chainid)
@@ -122,18 +110,50 @@ export default function Home() {
   }, [receiver])
 
   useEffect(() => {
+    const timer = window.setInterval(() => {
+      console.log('check stream value', value)
+      checkNewStream()
+    }, 3000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
     bootstrap()
   }, [])
 
   useEffect(() => {
     console.log('value', value)
-    setUrl(
-      'https://cdn.livepeer.com/hls/' +
-        JSON.parse(value).id +
-        '/index.m3u8',
-    )
+    if (value !== '') {
+      setUrl(
+        'https://cdn.livepeer.com/hls/' + JSON.parse(value).id + '/index.m3u8',
+      )
+    }
     console.log('new url', url)
   }, [value])
+
+  const checkNewStream = () => {
+    fetch('/api/streams')
+      .then((res) => res.json())
+      .then((array) => {
+        setActives(array)
+        setLoading(false)
+        if (array.length > 0) {
+          console.log('actives', array)
+          const newUrl = JSON.stringify({
+            id: array[0].playbackId,
+            name: array[0].name,
+          })
+          console.log('new url', newUrl)
+          setValue(newUrl)
+          setReceiver(array[0].name)
+          setUrl(
+            'https://cdn.livepeer.com/hls/' +
+              array[0].playbackId +
+              '/index.m3u8',
+          )
+        }
+      })
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
@@ -141,7 +161,9 @@ export default function Home() {
         <title>{receiver}</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      {address}
+      {address} 
+      <p>{url}</p>
+      <p>{value}</p>
       <ReactPlayer controls="true" playing="true" url={url} />
       <>
         <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
