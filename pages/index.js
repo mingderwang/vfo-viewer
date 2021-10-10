@@ -30,6 +30,39 @@ export default function Home() {
   const [currentReceiver, setCurrentReceiver] = useState('')
   const [url, setUrl] = useState('')
 
+  const notInList = (i, a) => {
+    console.log('i', i)
+    let arr = []
+    for (var i = 0, l = a.length; i < l; i++) {
+      arr.push(a[i].name)
+    }
+    console.log('arr2', arr)
+    if (arr.includes(i)) {
+      return true
+    }
+  }
+  const equalStreams = (a, b) => {
+    console.log('a array',a)
+    console.log('b array',b)
+    let arr = []
+    if (a.length !== b.length) {
+      return false
+    } else {
+      for (var i = 0, l = a.length; i < l; i++) {
+        arr.push(a[i].name)
+      }
+      console.log('arr', arr)
+      for (var i = 0, l = b.length; i < l; i++) {
+        console.log(i, b[i].name)
+        if (!(arr.includes(b[i].name))) {
+          console.log('return false')
+          return false
+        }
+      }
+      console.log('return true')
+      return true
+    }
+  }
   const startSuperFlow = async (provider) => {
     console.log('sf')
     const sf = new SuperfluidSDK.Framework({
@@ -116,7 +149,7 @@ export default function Home() {
   useEffect(() => {
     const timer = window.setInterval(() => {
       console.log('check stream value', value)
-      checkNewStream()
+      scanStream()
     }, 3000)
     return () => window.clearInterval(timer)
   }, [])
@@ -135,27 +168,60 @@ export default function Home() {
     console.log('new url', url)
   }, [value])
 
+
+  const scanStream = () => {
+    fetch('/api/streams')
+      .then((res) => res.json())
+      .then((array) => {
+        console.log('array', array)
+        console.log('actives', actives)
+        if (!equalStreams(array, actives)) {
+          setActives(array)
+          if (array.length === 1 || notInList(receiver, array) ) {
+            console.log('actives', array)
+            const newUrl = JSON.stringify({
+              id: array[0].playbackId,
+              name: shortAddress(array[0].name),
+              address: array[0].name,
+            })
+            console.log('new url', newUrl)
+            setValue(newUrl)
+            setReceiver(array[0].name)
+            setUrl(
+              'https://cdn.livepeer.com/hls/' +
+                array[0].playbackId +
+                '/index.m3u8',
+            )
+          }
+        }
+      })
+  }
+
   const checkNewStream = () => {
     fetch('/api/streams')
       .then((res) => res.json())
       .then((array) => {
-        setActives(array)
-        setLoading(false)
-        if (array.length > 0) {
-          console.log('actives', array)
-          const newUrl = JSON.stringify({
-            id: array[0].playbackId,
-            name: shortAddress(array[0].name),
-            address: array[0].name
-          })
-          console.log('new url', newUrl)
-          setValue(newUrl)
-          setReceiver(array[0].name)
-          setUrl(
-            'https://cdn.livepeer.com/hls/' +
-              array[0].playbackId +
-              '/index.m3u8',
-          )
+        console.log('array', array)
+        console.log('actives', actives)
+        if (!equalStreams(array, actives)) {
+          setActives(array)
+          setLoading(false)
+          if (array.length > 0) {
+            console.log('actives', array)
+            const newUrl = JSON.stringify({
+              id: array[0].playbackId,
+              name: shortAddress(array[0].name),
+              address: array[0].name,
+            })
+            console.log('new url', newUrl)
+            setValue(newUrl)
+            setReceiver(array[0].name)
+            setUrl(
+              'https://cdn.livepeer.com/hls/' +
+                array[0].playbackId +
+                '/index.m3u8',
+            )
+          }
         }
       })
   }
@@ -191,7 +257,7 @@ export default function Home() {
                 value={JSON.stringify({
                   id: active.playbackId,
                   name: shortAddress(active.name),
-                  address: active.name
+                  address: active.name,
                 })}
               >
                 {shortAddress(active.name)}
