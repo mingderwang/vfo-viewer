@@ -42,8 +42,8 @@ export default function Home() {
     }
   }
   const equalStreams = (a, b) => {
-    console.log('a array',a)
-    console.log('b array',b)
+    console.log('a array', a)
+    console.log('b array', b)
     let arr = []
     if (a.length !== b.length) {
       return false
@@ -54,7 +54,7 @@ export default function Home() {
       console.log('arr', arr)
       for (var i = 0, l = b.length; i < l; i++) {
         console.log(i, b[i].name)
-        if (!(arr.includes(b[i].name))) {
+        if (!arr.includes(b[i].name)) {
           console.log('return false')
           return false
         }
@@ -132,7 +132,8 @@ export default function Home() {
       console.log('start to flow', receiver)
       await bob.flow({
         recipient: receiver,
-        flowRate: '3858024691358000', // 10000 tokens / mo
+        //  flowRate: '3858024691358', // 10 tokens / mo -> '3858024691358'
+        flowRate: '277784691358', // 1 tokens / hour -> '277784691358'
       })
     }
     setCurrentReceiver(receiver)
@@ -168,7 +169,6 @@ export default function Home() {
     console.log('new url', url)
   }, [value])
 
-
   const scanStream = () => {
     fetch('/api/streams')
       .then((res) => res.json())
@@ -177,7 +177,7 @@ export default function Home() {
         console.log('actives', actives)
         if (!equalStreams(array, actives)) {
           setActives(array)
-          if (array.length === 1 || notInList(receiver, array) ) {
+          if (array.length === 1 || notInList(receiver, array)) {
             console.log('actives', array)
             const newUrl = JSON.stringify({
               id: array[0].playbackId,
