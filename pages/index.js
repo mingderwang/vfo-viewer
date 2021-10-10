@@ -12,6 +12,12 @@ var bob
 
 import { ethers } from 'ethers'
 
+const shortAddress = (address) => {
+  if (address.length === 42) {
+    return address.slice(0, 6).concat('...'.concat(address.slice(-4)))
+  }
+}
+
 export default function Home() {
   const playerRef = useRef()
   const [actives, setActives] = useState([])
@@ -50,7 +56,7 @@ export default function Home() {
     if (typeof provider !== 'undefined') {
       const address = await provider.selectedAddress
       console.log('address:', address)
-      setAddress(address)
+      setAddress(shortAddress(address))
       let network = await provider.chainId
       setChainId(network)
       console.log('provider:', provider)
@@ -64,7 +70,7 @@ export default function Home() {
       checkNewStream()
       startNewFlow()
 
-      const url_chainid = '/api/networks?chainId=' + network.chainId
+      const url_chainid = '/api/networks?chainId=' + network
       console.log('url_chainid', url_chainid)
       fetch(url_chainid)
         .then((res) => res.json())
@@ -139,7 +145,8 @@ export default function Home() {
           console.log('actives', array)
           const newUrl = JSON.stringify({
             id: array[0].playbackId,
-            name: array[0].name,
+            name: shortAddress(array[0].name),
+            address: array[0].name
           })
           console.log('new url', newUrl)
           setValue(newUrl)
@@ -175,7 +182,7 @@ export default function Home() {
               const json = JSON.parse(e.currentTarget.value)
               console.log('json', json)
               setValue(e.currentTarget.value)
-              setReceiver(json.name)
+              setReceiver(json.address)
             }}
           >
             {actives.map((active, i) => (
@@ -183,10 +190,11 @@ export default function Home() {
                 key={i}
                 value={JSON.stringify({
                   id: active.playbackId,
-                  name: active.name,
+                  name: shortAddress(active.name),
+                  address: active.name
                 })}
               >
-                {active.name}
+                {shortAddress(active.name)}
               </option>
             ))}
           </select>
@@ -195,7 +203,7 @@ export default function Home() {
       <footer className="flex items-center justify-center w-full h-24 border-t">
         <a
           className="flex items-center justify-center"
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
+          href="https://vfo-viewer-mingder78.vercel.app/"
           target="_blank"
           rel="noopener noreferrer"
         >
