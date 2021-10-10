@@ -14,6 +14,7 @@
     "@truffle/contract": "^4.3.38",
     "axios": "^0.22.0",
     "daisyui": "^1.14.2",
+    "ether-contract-react": "^0.0.3",
     "ethers": "5.0.0",
     "next": "latest",
     "react": "^17.0.2",

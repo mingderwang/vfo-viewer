@@ -45,20 +45,18 @@ export default function Home() {
       cacheProvider: true, // optional
       providerOptions, // required
     })
-    const provider = new Web3Provider(window.ethereum)
-    console.log(provider)
-    if (typeof provider !== 'undefined') {
-      let address = await provider.getSigner().getAddress()
-      console.log('address:', await provider.getSigner().getAddress())
-      setAddress(address)
-      let network = await provider.getNetwork()
-      console.log('chainId:', network.chainId)
-      setChainId(network.chainId)
-      console.log('provider:', provider)
 
-      const provider2 = new Web3Provider(window.ethereum)
+    const provider = await web3Modal.connect()
+    if (typeof provider !== 'undefined') {
+      const address = await provider.selectedAddress
+      console.log('address:', address)
+      setAddress(address)
+      let network = await provider.chainId
+      setChainId(network)
+      console.log('provider:', provider)
+      const provider2 = new Web3Provider(provider)
       const sf = await startSuperFlow(provider2)
-      const signer = provider.getSigner()
+      const signer = provider2.getSigner()
       const sender = await signer.getAddress()
       console.log('⚡🌙 🌄❤️💖 🔑🎛💧💬📟🏷🌐💯📚💄☀️⚛️ ✨💵🔗🏷🗺 signer', sender)
       bob = sf.user({ address: sender, token: sf.tokens.fDAIx.address })
@@ -161,7 +159,7 @@ export default function Home() {
         <title>{receiver}</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      {address} 
+      <p> {address} </p>
       <p>{url}</p>
       <p>{value}</p>
       <ReactPlayer controls="true" playing="true" url={url} />
