@@ -6,8 +6,7 @@ import SuperfluidSDK, {
   setTruffleContractDefaults,
 } from '@superfluid-finance/js-sdk'
 const { Web3Provider } = require('@ethersproject/providers')
-const ming = '0xCCB186825101B56d8Fae58065191Fcf4eC2F2033'
-const defaultReceiver = ming
+const defaultReceiver = ''
 var bob
 
 import { ethers } from 'ethers'
@@ -235,7 +234,13 @@ export default function Home() {
       <p> {address} </p>
       <p>{url}</p>
       <p>{value}</p>
-      <ReactPlayer controls="true" playing="true" url={url} />
+      <ReactPlayer
+        controls="true"
+        playing="true"
+        url={url}
+        volume="0.8"
+        muted="false"
+      />
       <>
         <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
           <button className="btn btn-primary">{network}</button>
